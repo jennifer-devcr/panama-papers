@@ -2,6 +2,7 @@ package com.exercise.common;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class Officer {
     private String name;
@@ -18,6 +19,14 @@ public class Officer {
         this.country = country;
     }
 
+    public Officer(String[] data) {
+        this.name = data[0] != null ? data[0] : "";
+        this.countryCode = data[3] != null ? data[3] : "";
+        this.country = data[4] != null ? data[4] : "";
+        this.nodeId = data[5] != null ? Integer.parseInt(data[5]) : 0;
+    }
+
+
     public String getCountryCode() {
         return this.countryCode;
     }
@@ -27,29 +36,23 @@ public class Officer {
     }
 
 
-    public List<Officer> mapToObject(List<String> dataSet) {
+    public static List<Officer> mapToObject(Stream<String> dataSet) {
         List<Officer> officers = new ArrayList<Officer>();
 
-        for (String line : dataSet) {
+        dataSet.forEach((line) -> {
             String[] rawData = line.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)"); // it doesn't split cell's values with commas inside.
 
             if (rawData.length >= 8) {
-                String name = rawData[0] != null ? rawData[0] : "";
-                String countryCode = rawData[3] != null ? rawData[3] : "";
-                String country = rawData[4] != null ? rawData[4] : "";
-                int nodeId = rawData[5] != null ? Integer.parseInt(rawData[5]) : 0;
-
-                officers.add(new Officer(name, nodeId, countryCode, country));
+                officers.add(new Officer(rawData));
             }
-        }
+        });
 
         return officers;
     }
 
-    public List<Officer> getOfficersFromFile(String filePath) throws Exception {
-        List<String> dataSet = FileReader.readFile(filePath);
-        List<Officer> officers = mapToObject(dataSet);
+    public static List<Officer> getOfficersFromFile(String filePath) throws Exception {
+        Stream<String> dataSet = FileReader.readFile(filePath);
 
-        return officers;
+        return mapToObject(dataSet);
     }
 }
