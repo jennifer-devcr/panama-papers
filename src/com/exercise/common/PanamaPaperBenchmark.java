@@ -1,4 +1,4 @@
-package com.exercise.common;
+/*package com.exercise.common;
 
 import com.google.caliper.Benchmark;
 
@@ -17,4 +17,4 @@ public class PanamaPaperBenchmark {
 
         return countries;
     }
-}
+}*/
