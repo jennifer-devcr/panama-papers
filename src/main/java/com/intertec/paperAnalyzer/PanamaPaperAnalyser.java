@@ -1,4 +1,4 @@
-package com.exercise.common;
+package com.intertec.paperAnalyzer;
 
 import java.util.List;
 

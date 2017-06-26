@@ -1,4 +1,4 @@
-package com.exercise.common;
+package com.intertec.paperAnalyzer;
 
 public class Intermediary implements Person {
     private String name;

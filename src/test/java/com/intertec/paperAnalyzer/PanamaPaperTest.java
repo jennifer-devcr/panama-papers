@@ -1,14 +1,12 @@
-package com.exercise.common;
+package com.intertec.paperAnalyzer;
 
-import org.junit.jupiter.api.Test;
-
+import org.junit.Test;
 import java.util.List;
+import static org.junit.Assert.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-class PanamaPaperTest {
+public class PanamaPaperTest {
     @Test
-    void getPeopleCountriesList() {
+    public void getPeopleCountriesList() throws Exception {
         PanamaPaper papers = new PanamaPaper();
         List<String> countries = papers.getPeopleCountriesList();
 

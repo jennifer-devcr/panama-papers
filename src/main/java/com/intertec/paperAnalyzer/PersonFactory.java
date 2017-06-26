@@ -1,4 +1,4 @@
-package com.exercise.common;
+package com.intertec.paperAnalyzer;
 
 import java.io.BufferedReader;
 import java.util.ArrayList;
