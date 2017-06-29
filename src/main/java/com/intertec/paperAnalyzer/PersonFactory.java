@@ -1,36 +1,36 @@
 package com.intertec.paperAnalyzer;
 
-import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
+
+import static java.util.stream.Collectors.toList;
 
 public class PersonFactory {
     public static final String OFFICER = "OFFICER";
     public static final String INTERMEDIARY = "INTERMEDIARY";
+    public static final String SEPARATOR = ",(?=([^\"]*\"[^\"]*\")*[^\"]*$)";
 
     public static List<Person> getFromFile(String filePath, String type) throws Exception {
-        BufferedReader dataSet = FileReader.readFile(filePath);
+        List<String> dataSet = FileReader.readFile(filePath);
 
-        return mapToObject(dataSet, type);
+        // return mapToObject(dataSet, type);
+
+        ForkJoinTask<List<Person>> task = new ForkJoinPerson(dataSet, type);
+        return new ForkJoinPool().invoke(task);
     }
 
-    public static List<Person> mapToObject(BufferedReader dataSet, String type) {
-        List<Person> people = new ArrayList<Person>();
-
-        dataSet.lines()
-                .skip(1) // Skipping CSV header.
-                .forEach((line) -> {
-                    Person person = createFromString(line, type);
-                    if (person != null) {
-                        people.add(person);
-                    }
-                });
-
-        return people;
+    public static List<Person> mapToObject(List<String> dataSet, String type) {
+        return dataSet.stream()// .parallelStream()
+                .map(line -> createFromString(line, type))
+                .filter(Objects::nonNull)
+                .collect(toList());
     }
 
     public static Person createFromString(String line, String type) {
-        String[] data = line.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)"); // it doesn't split cell's values with commas inside.
+        String[] data = line.split(SEPARATOR); // it doesn't split cell's values with commas inside.
 
         if (OFFICER == type && data.length >= 6) {
             String name = data[0] != null ? data[0] : "";

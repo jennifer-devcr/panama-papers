@@ -21,6 +21,7 @@ public class Intermediary implements Person {
         this.address = address;
     }
 
+    @Override
     public String getCountryCode() {
         return this.countryCode;
     }

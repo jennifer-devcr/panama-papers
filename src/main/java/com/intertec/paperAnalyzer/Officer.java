@@ -15,6 +15,7 @@ public class Officer implements Person {
         this.country = country;
     }
 
+    @Override
     public String getCountryCode() {
         return this.countryCode;
     }

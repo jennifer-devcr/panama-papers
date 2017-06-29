@@ -6,9 +6,9 @@ import static org.junit.Assert.*;
 
 public class PanamaPaperTest {
     @Test
-    public void getPeopleCountriesList() throws Exception {
+    public void testGetPeopleCountryCodesList() throws Exception {
         PanamaPaper papers = new PanamaPaper();
-        List<String> countries = papers.getPeopleCountriesList();
+        List<String> countries = papers.getPeopleCountryCodesList();
 
         assertNotNull(countries);
         assertFalse(0 == countries.size());
