@@ -9,7 +9,7 @@ import java.util.List;
 @VmOptions("-XX:-TieredCompilation")
 public class PersonFactoryBenchmark {
 
-    public List<String> createTestData () {
+    public List<String> createTestData() {
         List<String> data = new ArrayList<>();
 
         for (int i = 0; i < 3000; i++) {
@@ -20,12 +20,15 @@ public class PersonFactoryBenchmark {
     }
 
     @Benchmark
-    public void mapToObject (int reps) {
+    public void mapToObject(int reps) {
         List<String> data = createTestData();
         List<Person> people;
-
-        for (int i = 0; i < reps; i++) {
-            people = PersonFactory.mapToObject(data, PersonFactory.INTERMEDIARY);
+        try {
+            for (int i = 0; i < reps; i++) {
+                people = PersonFactory.parseLinesToIntermediaries(data);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

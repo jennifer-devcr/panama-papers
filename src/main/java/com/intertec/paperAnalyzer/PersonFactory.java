@@ -1,38 +1,33 @@
 package com.intertec.paperAnalyzer;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
-
 import static java.util.stream.Collectors.toList;
 
 public class PersonFactory {
-    public static final String OFFICER = "OFFICER";
-    public static final String INTERMEDIARY = "INTERMEDIARY";
     public static final String SEPARATOR = ",(?=([^\"]*\"[^\"]*\")*[^\"]*$)";
 
-    public static List<Person> getFromFile(String filePath, String type) throws Exception {
-        List<String> dataSet = FileReader.readFile(filePath);
-
-        // return mapToObject(dataSet, type);
-
-        ForkJoinTask<List<Person>> task = new ForkJoinPerson(dataSet, type);
-        return new ForkJoinPool().invoke(task);
-    }
-
-    public static List<Person> mapToObject(List<String> dataSet, String type) {
-        return dataSet.stream()// .parallelStream()
-                .map(line -> createFromString(line, type))
+    public static List<Person> parseLinesToOfficers(List<String> lines) throws Exception {
+        return lines.parallelStream()
+                .map(PersonFactory::parseOfficer)
                 .filter(Objects::nonNull)
                 .collect(toList());
     }
 
-    public static Person createFromString(String line, String type) {
+    public static List<Person> parseLinesToIntermediaries(List<String> lines) throws Exception {
+        // ForkJoinTask<List<Person>> task = new ForkJoinPerson(lines, PersonFactory::parseIntermediary);
+        // return new ForkJoinPool().invoke(task);
+
+        return lines.parallelStream()
+                .map(PersonFactory::parseIntermediary)
+                .filter(Objects::nonNull)
+                .collect(toList());
+    }
+
+    public static Person parseOfficer (String line) {
         String[] data = line.split(SEPARATOR); // it doesn't split cell's values with commas inside.
 
-        if (OFFICER == type && data.length >= 6) {
+        if (data.length >= 6) {
             String name = data[0] != null ? data[0] : "";
             String countryCode = data[3] != null ? data[3] : "";
             String country = data[4] != null ? data[4] : "";
@@ -40,7 +35,15 @@ public class PersonFactory {
 
             return new Officer(name, nodeId, countryCode, country);
 
-        } else if (INTERMEDIARY == type && data.length >= 8) {
+        }
+
+        return null;
+    }
+
+    public static Person parseIntermediary (String line) {
+        String[] data = line.split(SEPARATOR); // it doesn't split cell's values with commas inside.
+
+        if (data.length >= 8) {
             String name = data[0] != null ? data[0] : "";
             String countryCode = data[4] != null ? data[4] : "";
             String country = data[5] != null ? data[5] : "";

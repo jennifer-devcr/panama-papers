@@ -17,9 +17,12 @@ public class PanamaPaper implements PanamaPaperAnalyser {
         try {
             Set<String> peopleCodeSet;
             String intermediariesFilePath = "data-csv\\Intermediaries.csv";
+            List<String> intermediaryLines = FileReader.readFile(intermediariesFilePath);
+            List<Person> people = PersonFactory.parseLinesToIntermediaries(intermediaryLines);
+
             String officersFilePath = "data-csv\\Officers.csv";
-            List<Person> people = PersonFactory.getFromFile(intermediariesFilePath, PersonFactory.INTERMEDIARY);
-            people.addAll(PersonFactory.getFromFile(officersFilePath, PersonFactory.OFFICER));
+            List<String> officerLines = FileReader.readFile(officersFilePath);
+            people.addAll(PersonFactory.parseLinesToOfficers(officerLines));
 
             peopleCodeSet = people.parallelStream()
                     .map(p -> p.getCountryCode())

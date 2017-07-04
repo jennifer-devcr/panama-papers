@@ -2,26 +2,28 @@ package com.intertec.paperAnalyzer;
 
 import java.util.List;
 import java.util.concurrent.RecursiveTask;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ForkJoinPerson extends RecursiveTask<List<Person>> {
     public static final int THREAD_LIMIT = 1000; // What's a good size?
     private final List<String> dataLines;
     private final int start;
     private final int end;
-    private final String personType;
+    private Function<String, Person> computeCallback;
 
-    public ForkJoinPerson(List<String> dataLines, int start, int end, String personType) {
+    public ForkJoinPerson(List<String> dataLines, int start, int end, Function<String, Person> computeCallback) {
         this.dataLines = dataLines;
         this.start = start;
         this.end = end;
-        this.personType = personType;
+        this.computeCallback = computeCallback;
     }
 
-    public ForkJoinPerson(List<String> dataLines, String personType) {
+    public ForkJoinPerson(List<String> dataLines, Function<String, Person> computeCallback) {
         this.dataLines = dataLines;
         this.start = 0;
         this.end = dataLines.size();
-        this.personType = personType;
+        this.computeCallback = computeCallback;
     }
 
     @Override
@@ -29,13 +31,14 @@ public class ForkJoinPerson extends RecursiveTask<List<Person>> {
         int size = this.end - this.start;
 
         if (size <= THREAD_LIMIT) {
-            return computeSequentially();
+            List<String> subList = this.dataLines.subList(this.start, this.end);
+            return computeSequentially(subList);
         }
 
-        ForkJoinPerson leftTask = new ForkJoinPerson(this.dataLines, this.start, this.start + size / 2, this.personType);
+        ForkJoinPerson leftTask = new ForkJoinPerson(this.dataLines, this.start, this.start + size / 2, this.computeCallback);
         leftTask.fork();
 
-        ForkJoinPerson rightTask = new ForkJoinPerson(this.dataLines, this.start + size / 2, this.end, this.personType);
+        ForkJoinPerson rightTask = new ForkJoinPerson(this.dataLines, this.start + size / 2, this.end, this.computeCallback);
 
         List<Person> result = rightTask.compute();
         result.addAll(leftTask.join());
@@ -43,8 +46,7 @@ public class ForkJoinPerson extends RecursiveTask<List<Person>> {
         return result;
     }
 
-    private List<Person> computeSequentially() {
-        List<String> subList = this.dataLines.subList(this.start, this.end);
-        return PersonFactory.mapToObject(subList, this.personType);
+    private List<Person> computeSequentially(List<String> subList) {
+        return subList.stream().map(this.computeCallback).collect(Collectors.toList());
     }
 }
