@@ -19,7 +19,7 @@ public class PersonFactoryBenchmark {
         return data;
     }
 
-    @Benchmark
+   /* @Benchmark
     public void mapToObject(int reps) {
         List<String> data = createTestData();
         List<Person> people;
@@ -30,5 +30,5 @@ public class PersonFactoryBenchmark {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
+    }*/
 }
