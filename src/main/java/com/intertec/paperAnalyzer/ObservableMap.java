@@ -1,10 +1,90 @@
 package com.intertec.paperAnalyzer;
 
-import java.util.*;
-import java.util.function.BiFunction;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
 
-public class ObservableMap<M extends Map<Officer, Set<Entity>>> implements Map<Officer, Set<Entity>> {
-    private M map;
+public class ObservableMap<K, V> implements Map<K, V> {
+    private Map<K, V> map;
+    private List<BiConsumer<K, V>> listenersAddAction;
+
+    public ObservableMap(Map<K, V> map) {
+        this.map = map;
+        this.listenersAddAction = new ArrayList<>();
+    }
+
+    public void registerListenersAddAction(BiConsumer<K, V> func) {
+        this.listenersAddAction.add(func);
+    }
+
+    public void notifyListenersAddAction(K key, V value) {
+        this.listenersAddAction.forEach(listener -> listener.accept(key, value));
+    }
+
+    @Override
+    public int size() {
+        return this.map.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return this.map.isEmpty();
+    }
+
+    @Override
+    public boolean containsKey(Object key) {
+        return false;
+    }
+
+    @Override
+    public boolean containsValue(Object value) {
+        return false;
+    }
+
+    @Override
+    public V get(Object key) {
+        return this.map.get(key);
+    }
+
+    @Override
+    public V put(K key, V value) {
+        notifyListenersAddAction(key, value);
+        return this.map.put(key, value);
+    }
+
+    @Override
+    public V remove(Object key) {
+        return null;
+    }
+
+    @Override
+    public void putAll(Map<? extends K, ? extends V> m) {
+
+    }
+
+    @Override
+    public void clear() {
+
+    }
+
+    @Override
+    public Set<K> keySet() {
+        return null;
+    }
+
+    @Override
+    public Collection<V> values() {
+        return null;
+    }
+
+    @Override
+    public Set<Entry<K, V>> entrySet() {
+        return null;
+    }
+    /*private Map<K, V> map;
     private List<BiFunction<Officer, Set<Entity>, Boolean>> listenersAddAction;
 
     public ObservableMap(M map) {
@@ -84,5 +164,5 @@ public class ObservableMap<M extends Map<Officer, Set<Entity>>> implements Map<O
     @Override
     public Set<Entry<Officer, Set<Entity>>> entrySet() {
         return this.map.entrySet();
-    }
+    }*/
 }

@@ -70,7 +70,7 @@ public class PanamaPaperTest {
     @DataProvider(name = "testParseEdgeLinesData")
     public Object[][] testParseEdgeLinesData(){
         return new Object[][]{
-                {"all_edges_mini.csv", 63}
+                {"all_edges_mini.csv", 62}
         };
     }
 
@@ -145,37 +145,44 @@ public class PanamaPaperTest {
 
     @DataProvider(name = "testAnalyzePapersData")
     public Object[][] testAnalyzePapersData(){
+        Map <String, String> filePaths = new HashMap<>();
+        filePaths.put("officer", "Officers_mini.csv");
+        filePaths.put("intermediary", "Intermediaries_mini.csv");
+        filePaths.put("entity", "Entities_mini.csv");
+        filePaths.put("edge", "all_edges_mini.csv");
+
+        EntryPair<Officer, Integer> officerWithMoreEntities = new EntryPair<>(new Officer("", 12099150, new HashSet<>(), new HashSet<>()), 2);
+        EntryPair<String, Integer> countryWithMoreEntities = new EntryPair<>("CRI", 8);
+
         return new Object[][] {
-                {"CRI", "Officers_mini.csv", "Intermediaries_mini.csv", "Entities_mini.csv", "all_edges_mini.csv"}
+                // countryCode, File Paths, Officers Amount, Officer More Entities, Country More Entities
+                {"CRI", filePaths, 8, officerWithMoreEntities, countryWithMoreEntities}
         };
     }
 
     @Test(dataProvider = "testAnalyzePapersData")
-    public void testAnalyzePapers(String countryCode, String officerDocPath, String intermediaryDocPath, String entityDocPath, String edgeDocPath){
-        InputStream officerIs = PanamaPaper.class.getResourceAsStream(officerDocPath);
-        InputStream intermediaryIs = PanamaPaper.class.getResourceAsStream(intermediaryDocPath);
-        InputStream entityIs = PanamaPaper.class.getResourceAsStream(entityDocPath);
-        InputStream edgeIs = PanamaPaper.class.getResourceAsStream(edgeDocPath);
+    public void testAnalyzePapers(String countryCode, Map<String, String> filePaths, int filteredOfficerSize, EntryPair<Officer, Integer> officerWithMoreEntitiesResult, EntryPair<String, Integer> countryWithMoreEntitiesResult) {
+        InputStream officerIs = PanamaPaper.class.getResourceAsStream(filePaths.get("officer"));
+        InputStream intermediaryIs = PanamaPaper.class.getResourceAsStream(filePaths.get("intermediary"));
+        InputStream entityIs = PanamaPaper.class.getResourceAsStream(filePaths.get("entity"));
+        InputStream edgeIs = PanamaPaper.class.getResourceAsStream(filePaths.get("edge"));
 
         PaperResult paperResult = PanamaPaper.analyzePapers(officerIs, intermediaryIs, entityIs, edgeIs, countryCode);
+        PaperStatistic paperStatistic = paperResult.getStatistic();
 
-        assertTrue(true);
+        EntryPair<Officer, Integer> officerWithMoreEntities = paperStatistic.getOfficerWithMoreEntities();
+        EntryPair<String, Integer> countryWithMoreEntities = paperStatistic.getCountryWithMoreEntities();
+
+
+        assertNotNull(paperResult);
+        assertNotNull(paperStatistic);
+        assertNotNull(officerWithMoreEntities);
+        assertNotNull(officerWithMoreEntities.getEntry());
+
+        assertEquals(paperResult.getOfficers().size(), filteredOfficerSize);
+        assertEquals(officerWithMoreEntities.getEntry().getNodeId(), officerWithMoreEntitiesResult.getEntry().getNodeId());
+        assertEquals(officerWithMoreEntities.getValue(), officerWithMoreEntitiesResult.getValue());
+        assertEquals(countryWithMoreEntities.getEntry(), countryWithMoreEntitiesResult.getEntry());
+        assertEquals(countryWithMoreEntities.getValue(), countryWithMoreEntitiesResult.getValue());
     }
-
-    /*
-    @Test
-    public void testGetPeopleCountryCodesList() throws Exception {
-        PanamaPaper papers = new PanamaPaper();
-        List<String> countries = papers.getPeopleCountryCodesList();
-
-        assertNotNull(countries);
-        assertFalse(0 == countries.size());
-    }
-
-    @Test
-    public void testGetOfficersByCountry() throws Exception {
-        PanamaPaper papers = new PanamaPaper();
-        papers.getOfficersByCountry("CRI");
-    }
-    */
 }

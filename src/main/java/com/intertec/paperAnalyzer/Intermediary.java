@@ -1,5 +1,6 @@
 package com.intertec.paperAnalyzer;
 
+import java.util.Objects;
 import java.util.Set;
 
 public class Intermediary implements Person {
@@ -36,5 +37,25 @@ public class Intermediary implements Person {
     @Override
     public int getNodeId() {
         return nodeId;
+    }
+
+    @Override
+    public int hashCode(){
+        return Objects.hash(this.name, this.nodeId);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+
+        if(!(o instanceof Intermediary)) {
+            return false;
+        }
+
+        Intermediary intermediary = (Intermediary) o;
+
+        return Objects.equals(this.name, intermediary.name) && Objects.equals(this.nodeId, intermediary.nodeId);
     }
 }

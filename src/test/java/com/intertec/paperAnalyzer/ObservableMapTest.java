@@ -30,7 +30,7 @@ public class ObservableMapTest {
 
     @Test(dataProvider = "ObservableMapTestData")
     public void testPut(Officer officerJohn, Officer officerSarah, Set<Entity> entitiesA, Set<Entity> entitiesB, int numItems) throws Exception {
-        ObservableMap<Map<Officer, Set<Entity>>> observableMap = new ObservableMap<Map<Officer, Set<Entity>>>(new HashMap<>());
+        ObservableMap<Officer, Set<Entity>> observableMap = new ObservableMap<Officer, Set<Entity>>(new HashMap<>());
         observableMap.put(officerJohn, entitiesA);
         observableMap.put(officerSarah, entitiesB);
 
@@ -40,11 +40,10 @@ public class ObservableMapTest {
     @Test(dataProvider = "ObservableMapTestData")
     public void testNotifyListenersAddAction(Officer officerJohn, Officer officerSarah, Set<Entity> entitiesA, Set<Entity> entitiesB, int numItems) throws Exception {
         List<Officer> officers = new ArrayList<>();
-        ObservableMap<Map<Officer, Set<Entity>>> observableMap = new ObservableMap<Map<Officer, Set<Entity>>>(new HashMap<>());
+        ObservableMap<Officer, Set<Entity>> observableMap = new ObservableMap<Officer, Set<Entity>>(new HashMap<>());
 
         observableMap.registerListenersAddAction((keyOfficer, valueEntity) -> {
             officers.add(keyOfficer);
-            return true;
         });
 
         observableMap.put(officerJohn, entitiesA);

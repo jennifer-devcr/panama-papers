@@ -1,7 +1,13 @@
 package com.intertec.paperAnalyzer;
 
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -104,12 +110,13 @@ public class PanamaPaper implements PanamaPaperAnalyser {
 
     // Analyzers.
 
-    public static PaperResult analyzePapers(InputStream officersData, InputStream intermediariesData, InputStream entitiesData, InputStream edgesData, String countryCode) { // todo add inputstreams as memebers
+    // todo add inputstreams as members
+    public static PaperResult analyzePapers(InputStream officersData, InputStream intermediariesData, InputStream entitiesData, InputStream edgesData, String countryCode) {
+        Map<String, Object> results = new HashMap<>();
         PaperResult paperResult = new PaperResult();
         PaperStatistic paperStatistic = new PaperStatistic();
-        ObservableMap<Map<Officer, Set<Entity>>> observableMap = new ObservableMap<Map<Officer, Set<Entity>>>(new HashMap<>());
+        ObservableMap<Officer, Set<Entity>> observableMap = new ObservableMap<Officer, Set<Entity>>(new HashMap<>());
 
-        observableMap.registerListenersAddAction((officer, entities) -> paperStatistic.onEntitySetAdded(officer, entities));
 
         // Parsing data lines.
         List<Officer> officerList = parseOfficerLines(officersData);
@@ -117,14 +124,23 @@ public class PanamaPaper implements PanamaPaperAnalyser {
         Map<Integer, Entity> entityMap = parseEntityLines(entitiesData);
         Map<Integer, Map<Integer, Edge>> edgeMap = parseEdgeLines(edgesData);
 
-        officerList
+
+        // Map<Intermediary, Set<Entity>> intermediariesWithEntities = mapIntermediariesWithEntities(intermediaryList, entityMap, edgeMap);
+        observableMap.registerListenersAddAction((officer, entities) -> paperStatistic.onEntitySetAdded(officer, entities));
+
+
+        paperResult.setOfficers(officerList
             .stream()
             .filter(new OfficerFromCountryPredicate(entityMap, edgeMap, countryCode))
-            .reduce(observableMap,
-                    (map, officer) -> {
-                        map.put(officer, getEntitiesOfPerson(officer, edgeMap, entityMap));
-                        return map;
-                    });
+            .collect(Collectors.toMap(
+                    (officer) -> officer, // Key
+                    (officer) -> getEntitiesOfPerson(officer, edgeMap, entityMap), // Value
+                    (entry1, entry2) -> entry1, // Merge if key collisions.
+                    () -> observableMap // New Object. This lambda is a provider, returns something with not parameters.
+            )));
+
+
+        paperResult.setStatistic(paperStatistic);
 
         return paperResult;
     }
@@ -143,99 +159,21 @@ public class PanamaPaper implements PanamaPaperAnalyser {
         return entities;
     }
 
-
-
-
-
-
-
-
-    public void getOfficersByCountry(String countryCode) throws Exception {
-
-
-
-       /* List<Person> filteredOfficers = officerData.parallelStream()
-                // sacar entidadaes
-                .filter(new OfficerFromCountryPredicate(countryCode, edgeData, entityData).or())
-                .peek(officer -> findRelatedIntermediaries(officer, intermediaryData, edgeData))
-                .collect(toList());
-
-        this.paperResult.setOfficers(filteredOfficers);
-
-
-        // ToDo: move the following to another thread
-        this.paperStatistics.setCountryMoreEntities(findCountryMoreEntities());
-        this.paperStatistics.setPersonMoreEntities(findPersonWithMoreEntities());
-        */
-    }
-
-   /* public boolean isOfficerFromCountry(String countryCode, Person person, Map<String, Edge> edges, List<Entity> entities) {
-        String[] countryCodes = person.getCountryCode();
-        List <Entity> officerEntities = getEntitiesByPerson(person, edges, entities);
-        boolean result = Arrays.binarySearch(countryCodes, countryCode) > 0; // Searching in Person HashSet y se hace containsTo de tiempo contante O(1)
-        this.paperResult.addToEntitiesByPerson(person.getNodeId(), officerEntities);
-
-        if (!result && countryCodes.length == 0) {
-            result = officerEntities.stream()
-                    .anyMatch(entity -> Arrays.binarySearch(entity.getCountryCode(), countryCode) > 0); // Searching in Entity. HashSet y se hace containsTo
-        }
-
-        if (result) {
-            this.paperResult.addToPersonWithMoreEntities(person, officerEntities);
-        }
-
-        return result;
-    }
-
-    public List<Entity> getEntitiesByPerson(Person person, Map<String, Edge> edges, List<Entity> entities) {
-        List <Entity> personEntities = entities.stream() // parallelStream()
-                .filter(entity -> isEntityRelatedToPerson(entity, person, edges))
-                .peek(entity -> this.paperResult.sumEntityByCountry(entity)) // sacar esto porque no va con el propocito del funcion, single responsability
-                .collect(toList());
-
-        return personEntities;
-    }
-
-
-
-    public void findRelatedIntermediaries(Person officer, List<Person> intermediaries, Map<String, Edge> edges) {
-        List <Person> relatedIntermediaries = intermediaries.stream() // parallelStream()
-                .filter(intermediary -> hasEntitiesRelatedToOfficer(officer, intermediary, edges))
-                //.peek(intermediary -> this.paperResult.sumIntermediaryRelations(intermediary))
-                .collect(toList());
-    }
-
-    public boolean hasEntitiesRelatedToOfficer(Person officer, Person intermediary, Map<String, Edge> edges) {
-        List<Entity> entities = paperResult.getEntitiesByPersonNodeId(officer.getNodeId());
-
-        if (entities != null) {
-            return entities.stream().anyMatch(entity -> isEntityRelatedToPerson(entity, intermediary, edges));
-        }
-
-        return false;
-    }
-
-    public boolean isEntityRelatedToPerson(Entity entity, Person person, Map<String, Edge> edges) {
-        String edgeKey = Integer.toString(person.getNodeId()) + '_' + Integer.toString(entity.getNodeId());
-        return edges.get(edgeKey) != null;
-    }
-
-
-    public String findCountryMoreEntities() {
-        return this.paperResult.getCountEntityByCountry()
-                .entrySet()
+    /*public static Map<Integer, Set<Intermediary>> mapIntermediariesWithEntities(List<Intermediary> intermediaryList, Map<Integer, Entity>entityMap, Map<Integer, Map<Integer, Edge>> edgeMap) {
+        return intermediaryList
                 .stream()
-                .max((entry1, entry2) -> entry1.getValue() > entry2.getValue() ? 1 : -1)
-                .get()
-                .getKey();
-    }
-
-    public Person findPersonWithMoreEntities() {
-        return this.paperResult.getPersonWithMoreEntities()
-                .entrySet()
-                .stream()
-                .max((entry1, entry2) -> entry1.getKey() > entry2.getKey() ? 1 : -1)
-                .get()
-                .getValue();
+                .map(intermediary -> getEntitiesOfPerson(intermediary, edgeMap, entityMap)
+                        .stream()
+                        .collect(HashMap<Integer, Set<Intermediary>>::new,
+                                (map, entity) -> {
+                                    Set<Intermediary> set = new HashSet<Intermediary>();
+                                    set.add(intermediary);
+                                    map.put(entity.getNodeId(), set);
+                                 },
+                                (entity1, entity2) -> { entity1.putAll(entity2); }
+                        ))
+                .reduce(new HashMap<>(), (map1, map2) -> {
+                    map1.put(map2)
+                });
     }*/
 }
