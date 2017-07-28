@@ -1,9 +1,6 @@
 package com.intertec.paperAnalyzer;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -43,6 +40,13 @@ public class PaperStatistic {
         this.countryWithMoreEntities = countryWithMoreEntities;
     }
 
+    public EntryPair<Intermediary, Integer> getIntermediaryAssistedMoreOfficers() {
+        return intermediaryAssistedMoreOfficers;
+    }
+
+    public void setIntermediaryAssistedMoreOfficers(EntryPair<Intermediary, Integer> intermediaryAssistedMoreOfficers) {
+        this.intermediaryAssistedMoreOfficers = intermediaryAssistedMoreOfficers;
+    }
 
 
     private void checkEntitiesAmount(Officer officer, Set<Entity> entities) {
@@ -83,86 +87,38 @@ public class PaperStatistic {
     }
 
 
-
-
-
-
-
-    // Map<CountryCode, Integer>
     private void sumAmountOfEntitiesInCountry(Set<Entity> entities) {
-        this.amountOfEntitiesByCountry = entities.stream()
-                .map(this::getCountriesOfEntity)
-                .reduce(new HashMap<>(), (accumulatedMap, map) -> {
-                    accumulatedMap.putAll(map);
-                    return accumulatedMap;
-                });
-    }
-            //  country code, amount
-    private Map<String, Integer> getCountriesOfEntity(Entity entity) {
-        return entity.getCountryCode()
-                .stream()
-                .map(this::sumEntityInCountry)
-                .collect(Collectors.toMap(
-                        entry -> entry.getEntry(),
-                        entry -> entry.getValue(),
-                        (entry1, entry2) -> entry1
-                ));
+        entities.forEach(entity ->
+            entity.getCountryCode()
+                    .forEach(countryCode ->
+                            amountOfEntitiesByCountry.put(countryCode, amountOfEntitiesByCountry.getOrDefault(countryCode, 0) + 1))
+        );
     }
 
-    private EntryPair<String, Integer> sumEntityInCountry(String countryCode) {
-        Integer amount = this.amountOfEntitiesByCountry.get(countryCode);
-        return new EntryPair<String, Integer>(countryCode, (amount != null ? ++amount : 1));
+    /**
+     * @param intermediaryPairs: Pairs of Intermediary and its entities' node id.
+     */
+    private void sumOfficersAssistedByIntermediary(Set<Entity> entities, List<EntryPair<Intermediary, Set<Integer>>> intermediaryPairs) {
+        intermediaryPairs.stream()
+        .filter(pair ->
+            entities
+                    .stream()
+                    .anyMatch(entity -> pair.getValue().contains(entity.getNodeId()))
+        )
+        .forEach((pair) ->
+            amountOfOfficersByIntermediary.put(pair.getEntry(), amountOfOfficersByIntermediary.getOrDefault(pair.getEntry(), 0) + 1)
+        );
     }
 
 
-
-
-
-
-
-
-
-
-
-
-    private void sumOfficersAssistedByIntermediary(Officer officer, Set<Entity> entities, Map<Integer, Set<Intermediary>> intermediaries) {
-        this.amountOfOfficersByIntermediary = entities
-                .stream()
-                .map(entity -> intermediaries.get(entity.getNodeId()))
-                .filter(set -> !set.isEmpty())
-                .map(this::getAmountOfIntermediary)
-                .reduce(new HashMap<>(), (accumulatedMap, map) -> {
-                    accumulatedMap.putAll(map);
-                    return accumulatedMap;
-                });
-    }
-
-    private Map<Intermediary, Integer> getAmountOfIntermediary(Set<Intermediary> intermediaries) {
-        return intermediaries
-                .stream()
-                .map(this::sumIntermediary)
-                .collect(Collectors.toMap(
-                        entry -> entry.getEntry(),
-                        entry -> entry.getValue(),
-                        (entry1, entry2) -> entry1
-                ));
-    }
-
-    private EntryPair<Intermediary, Integer> sumIntermediary(Intermediary intermediary) {
-        Integer amount = this.amountOfOfficersByIntermediary.get(intermediary);
-        return new EntryPair<Intermediary, Integer>(intermediary, (amount != null ? ++amount : 1));
-    }
-
-
-
-    public boolean onEntitySetAdded(Officer officer, Set<Entity> entities) {
+    public boolean onEntitySetAdded(Officer officer, Set<Entity> entities, List<EntryPair<Intermediary, Set<Integer>>> intermediaryPairs) {
         checkEntitiesAmount(officer, entities);
 
         sumAmountOfEntitiesInCountry(entities);
         checkEntitiesInCountryAmount();
 
-        // sumOfficersAssistedByIntermediary(officer, entities, intermediaries);
-        // checkIntermediariesAmount();
+        sumOfficersAssistedByIntermediary(entities, intermediaryPairs);
+        checkIntermediariesAmount();
 
         return true;
     }

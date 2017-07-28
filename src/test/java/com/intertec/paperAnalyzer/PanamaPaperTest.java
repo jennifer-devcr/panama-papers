@@ -153,15 +153,16 @@ public class PanamaPaperTest {
 
         EntryPair<Officer, Integer> officerWithMoreEntities = new EntryPair<>(new Officer("", 12099150, new HashSet<>(), new HashSet<>()), 2);
         EntryPair<String, Integer> countryWithMoreEntities = new EntryPair<>("CRI", 8);
+        EntryPair<Intermediary, Integer> intermediaryAssistedMoreOfficers = new EntryPair<>(new Intermediary("", new HashSet<>(), new HashSet<>(), "", "", 11000003, ""), 2);
 
         return new Object[][] {
                 // countryCode, File Paths, Officers Amount, Officer More Entities, Country More Entities
-                {"CRI", filePaths, 8, officerWithMoreEntities, countryWithMoreEntities}
+                {"CRI", filePaths, 8, officerWithMoreEntities, countryWithMoreEntities, intermediaryAssistedMoreOfficers}
         };
     }
 
     @Test(dataProvider = "testAnalyzePapersData")
-    public void testAnalyzePapers(String countryCode, Map<String, String> filePaths, int filteredOfficerSize, EntryPair<Officer, Integer> officerWithMoreEntitiesResult, EntryPair<String, Integer> countryWithMoreEntitiesResult) {
+    public void testAnalyzePapers(String countryCode, Map<String, String> filePaths, int filteredOfficerSize, EntryPair<Officer, Integer> officerWithMoreEntitiesResult, EntryPair<String, Integer> countryWithMoreEntitiesResult, EntryPair<Intermediary, Integer> intermediaryAssistedMoreOfficersResult) {
         InputStream officerIs = PanamaPaper.class.getResourceAsStream(filePaths.get("officer"));
         InputStream intermediaryIs = PanamaPaper.class.getResourceAsStream(filePaths.get("intermediary"));
         InputStream entityIs = PanamaPaper.class.getResourceAsStream(filePaths.get("entity"));
@@ -172,6 +173,7 @@ public class PanamaPaperTest {
 
         EntryPair<Officer, Integer> officerWithMoreEntities = paperStatistic.getOfficerWithMoreEntities();
         EntryPair<String, Integer> countryWithMoreEntities = paperStatistic.getCountryWithMoreEntities();
+        EntryPair<Intermediary, Integer> intermediaryAssistedMoreOfficers = paperStatistic.getIntermediaryAssistedMoreOfficers();
 
 
         assertNotNull(paperResult);
@@ -184,5 +186,7 @@ public class PanamaPaperTest {
         assertEquals(officerWithMoreEntities.getValue(), officerWithMoreEntitiesResult.getValue());
         assertEquals(countryWithMoreEntities.getEntry(), countryWithMoreEntitiesResult.getEntry());
         assertEquals(countryWithMoreEntities.getValue(), countryWithMoreEntitiesResult.getValue());
+        assertEquals(intermediaryAssistedMoreOfficers.getEntry().getNodeId(), intermediaryAssistedMoreOfficersResult.getEntry().getNodeId());
+        assertEquals(intermediaryAssistedMoreOfficers.getValue(), intermediaryAssistedMoreOfficersResult.getValue());
     }
 }

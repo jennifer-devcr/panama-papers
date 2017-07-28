@@ -125,8 +125,8 @@ public class PanamaPaper implements PanamaPaperAnalyser {
         Map<Integer, Map<Integer, Edge>> edgeMap = parseEdgeLines(edgesData);
 
 
-        // Map<Intermediary, Set<Entity>> intermediariesWithEntities = mapIntermediariesWithEntities(intermediaryList, entityMap, edgeMap);
-        observableMap.registerListenersAddAction((officer, entities) -> paperStatistic.onEntitySetAdded(officer, entities));
+        List<EntryPair<Intermediary, Set<Integer>>> intermediariesWithEntities = mapIntermediariesWithEntities(intermediaryList, entityMap, edgeMap);
+        observableMap.registerListenersAddAction((officer, entities) -> paperStatistic.onEntitySetAdded(officer, entities, intermediariesWithEntities));
 
 
         paperResult.setOfficers(officerList
@@ -159,21 +159,22 @@ public class PanamaPaper implements PanamaPaperAnalyser {
         return entities;
     }
 
-    /*public static Map<Integer, Set<Intermediary>> mapIntermediariesWithEntities(List<Intermediary> intermediaryList, Map<Integer, Entity>entityMap, Map<Integer, Map<Integer, Edge>> edgeMap) {
+    /**
+     * @return Pairs of Intermediary and its entities' node id.
+     */
+    public static List<EntryPair<Intermediary, Set<Integer>>> mapIntermediariesWithEntities(List<Intermediary> intermediaryList, Map<Integer, Entity>entityMap, Map<Integer, Map<Integer, Edge>> edgeMap) {
         return intermediaryList
                 .stream()
-                .map(intermediary -> getEntitiesOfPerson(intermediary, edgeMap, entityMap)
-                        .stream()
-                        .collect(HashMap<Integer, Set<Intermediary>>::new,
-                                (map, entity) -> {
-                                    Set<Intermediary> set = new HashSet<Intermediary>();
-                                    set.add(intermediary);
-                                    map.put(entity.getNodeId(), set);
-                                 },
-                                (entity1, entity2) -> { entity1.putAll(entity2); }
-                        ))
-                .reduce(new HashMap<>(), (map1, map2) -> {
-                    map1.put(map2)
-                });
-    }*/
+                .map(intermediary -> {
+                    Set<Integer> entitiesIDs = getEntitiesOfPerson(intermediary, edgeMap, entityMap)
+                            .stream()
+                            .collect(HashSet<Integer>::new,
+                                    (set, entity) -> set.add(entity.getNodeId()),
+                                    (entity1, entity2) -> entity1.addAll(entity2)
+                            );
+                    return new EntryPair<Intermediary, Set<Integer>>(intermediary, entitiesIDs);
+                })
+                .collect(toList());
+
+    }
 }
