@@ -1,5 +1,6 @@
 package com.intertec.paperAnalyzer;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +17,12 @@ import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 
 public class PanamaPaper implements PanamaPaperAnalyser {
+    private LinesFileParser<List<Officer>> officerLinesParser;
+    private LinesFileParser<List<Intermediary>> intermediaryLinesParser;
+    private LinesFileParser<Map<Integer, Entity>> entityLinesParser;
+    private LinesFileParser<Map<Integer, Map<Integer, Edge>>> edgeLinesParser;
+
+    public PanamaPaper() {}
 
     @Override
     public List<String> getPeopleCountryCodesList() {
@@ -42,76 +49,10 @@ public class PanamaPaper implements PanamaPaperAnalyser {
         return new ArrayList<>(countries);
     }
 
-
-    // InputStream processors.
-
-    public static List<Officer> parseOfficerLines (InputStream is) {
-        try {
-            return FileReader.getLinesFromResource(is)
-                    .parallelStream()
-                    .map(PersonFactory::parseOfficer) // ToDo: work with Generics
-                    .filter(Objects::nonNull)
-                    .collect(toList());
-
-        } catch (Exception e) {
-            e.printStackTrace(); // In production we don't print stack trace.
-        }
-
-        return emptyList();
-    }
-
-    public static List<Intermediary> parseIntermediaryLines (InputStream is) {
-        try {
-            return FileReader.getLinesFromResource(is)
-                    .parallelStream()
-                    .map(PersonFactory::parseIntermediary)  // ToDo: work with Generics
-                    .filter(Objects::nonNull)
-                    .collect(toList());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return emptyList();
-    }
-
-    public static Map<Integer, Entity> parseEntityLines (InputStream is) {
-        try {
-            return FileReader.getLinesFromResource(is)
-                    .parallelStream()
-                    .map(EntityFactory::parseEntity)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toMap(Entity::getNodeId, entity -> entity, (entity1, entity2) -> entity1));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return emptyMap();
-    }
-
-    public static Map<Integer, Map<Integer, Edge>> parseEdgeLines (InputStream is) {
-        try {
-            return FileReader.getLinesFromResource(is)
-                    .parallelStream() // todo add caliper to test with or without threads
-                    .map(EdgeFactory::parseEdge)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.groupingBy(e -> e.getPersonNodeId(),
-                             Collectors.toMap(e -> e.getEntityNodeId(),
-                             Function.identity())));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return emptyMap();
-    }
-
-
     // Analyzers.
 
     // todo add inputstreams as members
-    public static PaperResult analyzePapers(InputStream officersData, InputStream intermediariesData, InputStream entitiesData, InputStream edgesData, String countryCode) {
+    public PaperResult analyzePapers(InputStream officersData, InputStream intermediariesData, InputStream entitiesData, InputStream edgesData, String countryCode) throws IOException {
         Map<String, Object> results = new HashMap<>();
         PaperResult paperResult = new PaperResult();
         PaperStatistic paperStatistic = new PaperStatistic();
@@ -119,10 +60,10 @@ public class PanamaPaper implements PanamaPaperAnalyser {
 
 
         // Parsing data lines.
-        List<Officer> officerList = parseOfficerLines(officersData);
-        List<Intermediary> intermediaryList = parseIntermediaryLines(intermediariesData);
-        Map<Integer, Entity> entityMap = parseEntityLines(entitiesData);
-        Map<Integer, Map<Integer, Edge>> edgeMap = parseEdgeLines(edgesData);
+        List<Officer> officerList = getOfficerLinesParser().parseLines(officersData);
+        List<Intermediary> intermediaryList = getIntermediaryLinesParser().parseLines(intermediariesData);
+        Map<Integer, Entity> entityMap = getEntityLinesParser().parseLines(entitiesData);
+        Map<Integer, Map<Integer, Edge>> edgeMap = getEdgeLinesParser().parseLines(edgesData);
 
 
         List<EntryPair<Intermediary, Set<Integer>>> intermediariesWithEntities = mapIntermediariesWithEntities(intermediaryList, entityMap, edgeMap);
@@ -145,7 +86,7 @@ public class PanamaPaper implements PanamaPaperAnalyser {
         return paperResult;
     }
 
-    public static Set<Entity> getEntitiesOfPerson(Person person, Map<Integer, Map<Integer, Edge>> edgeData, Map<Integer, Entity> entityData) {
+    public Set<Entity> getEntitiesOfPerson(Person person, Map<Integer, Map<Integer, Edge>> edgeData, Map<Integer, Entity> entityData) {
         Map<Integer, Edge> entityIdsOfPerson = edgeData.get(person.getNodeId());
         Set<Entity> entities = new HashSet<>();
 
@@ -162,7 +103,7 @@ public class PanamaPaper implements PanamaPaperAnalyser {
     /**
      * @return Pairs of Intermediary and its entities' node id.
      */
-    public static List<EntryPair<Intermediary, Set<Integer>>> mapIntermediariesWithEntities(List<Intermediary> intermediaryList, Map<Integer, Entity>entityMap, Map<Integer, Map<Integer, Edge>> edgeMap) {
+    public List<EntryPair<Intermediary, Set<Integer>>> mapIntermediariesWithEntities(List<Intermediary> intermediaryList, Map<Integer, Entity>entityMap, Map<Integer, Map<Integer, Edge>> edgeMap) {
         return intermediaryList
                 .stream()
                 .map(intermediary -> {
@@ -176,5 +117,38 @@ public class PanamaPaper implements PanamaPaperAnalyser {
                 })
                 .collect(toList());
 
+    }
+
+
+    public LinesFileParser<List<Officer>> getOfficerLinesParser() {
+        return officerLinesParser;
+    }
+
+    public void setOfficerLinesParser(LinesFileParser<List<Officer>> officerLinesParser) {
+        this.officerLinesParser = officerLinesParser;
+    }
+
+    public LinesFileParser<List<Intermediary>> getIntermediaryLinesParser() {
+        return intermediaryLinesParser;
+    }
+
+    public void setIntermediaryLinesParser(LinesFileParser<List<Intermediary>> intermediaryLinesParser) {
+        this.intermediaryLinesParser = intermediaryLinesParser;
+    }
+
+    public LinesFileParser<Map<Integer, Entity>> getEntityLinesParser() {
+        return entityLinesParser;
+    }
+
+    public void setEntityLinesParser(LinesFileParser<Map<Integer, Entity>> entityLinesParser) {
+        this.entityLinesParser = entityLinesParser;
+    }
+
+    public LinesFileParser<Map<Integer, Map<Integer, Edge>>> getEdgeLinesParser() {
+        return edgeLinesParser;
+    }
+
+    public void setEdgeLinesParser(LinesFileParser<Map<Integer, Map<Integer, Edge>>> edgeLinesParser) {
+        this.edgeLinesParser = edgeLinesParser;
     }
 }

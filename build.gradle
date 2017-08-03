@@ -17,4 +17,5 @@ test {
 dependencies {
     compile 'com.google.caliper:caliper:1.0-beta-2'
     testCompile 'org.testng:testng:6.11'
+    compile 'org.springframework:spring-core'
 }

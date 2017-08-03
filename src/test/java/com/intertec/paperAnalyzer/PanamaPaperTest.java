@@ -3,6 +3,8 @@ package com.intertec.paperAnalyzer;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,7 +18,7 @@ import static org.testng.Assert.assertTrue;
 
 
 public class PanamaPaperTest {
-    @DataProvider(name = "testParseOfficerLinesData")
+    /*@DataProvider(name = "testParseOfficerLinesData")
     public Object[][] testParseOfficerLinesData(){
         return new Object[][]{
                 {"Officers_mini.csv", 32}
@@ -141,7 +143,7 @@ public class PanamaPaperTest {
         assertNotNull(entitiesOfPerson);
         assertEquals(entitiesOfPerson.size(), entityAmount);
     }
-
+*/
 
     @DataProvider(name = "testAnalyzePapersData")
     public Object[][] testAnalyzePapersData(){
@@ -162,13 +164,21 @@ public class PanamaPaperTest {
     }
 
     @Test(dataProvider = "testAnalyzePapersData")
-    public void testAnalyzePapers(String countryCode, Map<String, String> filePaths, int filteredOfficerSize, EntryPair<Officer, Integer> officerWithMoreEntitiesResult, EntryPair<String, Integer> countryWithMoreEntitiesResult, EntryPair<Intermediary, Integer> intermediaryAssistedMoreOfficersResult) {
+    public void testAnalyzePapers(String countryCode, Map<String, String> filePaths, int filteredOfficerSize, EntryPair<Officer, Integer> officerWithMoreEntitiesResult,
+                                  EntryPair<String, Integer> countryWithMoreEntitiesResult, EntryPair<Intermediary, Integer> intermediaryAssistedMoreOfficersResult) throws IOException{
+
         InputStream officerIs = PanamaPaper.class.getResourceAsStream(filePaths.get("officer"));
         InputStream intermediaryIs = PanamaPaper.class.getResourceAsStream(filePaths.get("intermediary"));
         InputStream entityIs = PanamaPaper.class.getResourceAsStream(filePaths.get("entity"));
         InputStream edgeIs = PanamaPaper.class.getResourceAsStream(filePaths.get("edge"));
 
-        PaperResult paperResult = PanamaPaper.analyzePapers(officerIs, intermediaryIs, entityIs, edgeIs, countryCode);
+        PanamaPaper panamaPaper = new PanamaPaper();
+        panamaPaper.setOfficerLinesParser(new OfficerParser());
+        panamaPaper.setIntermediaryLinesParser(new IntermediaryParser());
+        panamaPaper.setEdgeLinesParser(new EdgeParser());
+        panamaPaper.setEntityLinesParser(new EntityParser());
+
+        PaperResult paperResult = panamaPaper.analyzePapers(officerIs, intermediaryIs, entityIs, edgeIs, countryCode);
         PaperStatistic paperStatistic = paperResult.getStatistic();
 
         EntryPair<Officer, Integer> officerWithMoreEntities = paperStatistic.getOfficerWithMoreEntities();
