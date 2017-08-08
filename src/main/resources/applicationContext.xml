@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	   					   http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="panamaPaperBean" class="com.intertec.paperanalyzer.domainmodels.PanamaPaper">
+    <!--
+        <property name="officerLinesParser" ref="officerParser"/>
+        <property name="intermediaryLinesParser" ref="intermediaryParser"/>
+        <property name="entityLinesParser" ref="entityParser"/>
+        <property name="edgeLinesParser" ref="edgeParser"/>
+    -->
+    </bean>
+<!--
+    <bean id="officerParser" class="com.intertec.paperanalyzer.parsers.OfficerParser" scope="prototype"></bean>
+
+    <bean id="intermediaryParser" class="com.intertec.paperanalyzer.parsers.IntermediaryParser" scope="prototype"></bean>
+
+    <bean id="entityParser" class="com.intertec.paperanalyzer.parsers.EntityParser" scope="prototype"></bean>
+
+    <bean id="edgeParser" class="com.intertec.paperanalyzer.parsers.EdgeParser" scope="prototype"></bean>
+-->
+</beans>
