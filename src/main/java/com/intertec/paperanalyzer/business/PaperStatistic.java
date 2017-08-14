@@ -1,6 +1,9 @@
-package com.intertec.paperanalyzer.domainmodels;
+package com.intertec.paperanalyzer.business;
 
 import com.intertec.paperanalyzer.commons.EntryPair;
+import com.intertec.paperanalyzer.domainmodels.Entity;
+import com.intertec.paperanalyzer.domainmodels.Intermediary;
+import com.intertec.paperanalyzer.domainmodels.Officer;
 
 import java.util.*;
 

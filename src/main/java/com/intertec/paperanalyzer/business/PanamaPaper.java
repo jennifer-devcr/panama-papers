@@ -1,11 +1,11 @@
-package com.intertec.paperanalyzer.domainmodels;
+package com.intertec.paperanalyzer.business;
 
 import com.intertec.paperanalyzer.commons.EntryPair;
 import com.intertec.paperanalyzer.commons.ObservableMap;
+import com.intertec.paperanalyzer.domainmodels.*;
 import com.intertec.paperanalyzer.predicates.OfficerFromCountryPredicate;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,8 +16,20 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toList;
 
 public class PanamaPaper {
+    private List<Officer> officerList;
+    private List<Intermediary> intermediaryList;
+    private Map<Integer, Entity> entityMap;
+    private Map<Integer, Map<Integer, Edge>> edgeMap;
 
-    public PaperResult analyzePapers(String countryCode, List<Officer> officerList, List<Intermediary> intermediaryList, Map<Integer, Entity> entityMap, Map<Integer, Map<Integer, Edge>> edgeMap) throws IOException {
+
+    public PanamaPaper(List<Officer> officerList, List<Intermediary> intermediaryList, Map<Integer, Entity> entityMap, Map<Integer, Map<Integer, Edge>> edgeMap) {
+        this.officerList = officerList;
+        this.intermediaryList = intermediaryList;
+        this.entityMap = entityMap;
+        this.edgeMap = edgeMap;
+    }
+
+    public PaperResult analyzePapers(String countryCode) throws IOException {
         Map<String, Object> results = new HashMap<>();
         PaperResult paperResult = new PaperResult();
         PaperStatistic paperStatistic = new PaperStatistic();
@@ -25,7 +37,7 @@ public class PanamaPaper {
 
 
         // Parsing data lines.
-        List<EntryPair<Intermediary, Set<Integer>>> intermediariesWithEntities = mapIntermediariesWithEntities(intermediaryList, entityMap, edgeMap);
+        List<EntryPair<Intermediary, Set<Integer>>> intermediariesWithEntities = mapIntermediariesWithEntities();
         observableMap.registerListenersAddAction((officer, entities) -> paperStatistic.onEntitySetAdded(officer, entities, intermediariesWithEntities));
 
 
@@ -34,7 +46,7 @@ public class PanamaPaper {
             .filter(new OfficerFromCountryPredicate(entityMap, edgeMap, countryCode))
             .collect(Collectors.toMap(
                     (officer) -> officer, // Key
-                    (officer) -> getEntitiesOfPerson(officer, edgeMap, entityMap), // Value
+                    (officer) -> getEntitiesOfPerson(officer), // Value
                     (entry1, entry2) -> entry1, // Merge if key collisions.
                     () -> observableMap // New Object. This lambda is a provider, returns something with not parameters.
             )));
@@ -45,14 +57,14 @@ public class PanamaPaper {
         return paperResult;
     }
 
-    public Set<Entity> getEntitiesOfPerson(Person person, Map<Integer, Map<Integer, Edge>> edgeData, Map<Integer, Entity> entityData) {
-        Map<Integer, Edge> entityIdsOfPerson = edgeData.get(person.getNodeId());
+    public Set<Entity> getEntitiesOfPerson(Person person) {
+        Map<Integer, Edge> entityIdsOfPerson = edgeMap.get(person.getNodeId());
         Set<Entity> entities = new HashSet<>();
 
         if (entityIdsOfPerson != null) {
             entities = entityIdsOfPerson.keySet()
                 .stream()
-                .map(id -> entityData.get(id))
+                .map(id -> entityMap.get(id))
                 .collect(Collectors.toSet());
         }
 
@@ -62,11 +74,11 @@ public class PanamaPaper {
     /**
      * @return Pairs of Intermediary and its entities' node id.
      */
-    List<EntryPair<Intermediary, Set<Integer>>> mapIntermediariesWithEntities(List<Intermediary> intermediaryList, Map<Integer, Entity>entityMap, Map<Integer, Map<Integer, Edge>> edgeMap) {
+    List<EntryPair<Intermediary, Set<Integer>>> mapIntermediariesWithEntities() {
         return intermediaryList
                 .stream()
                 .map(intermediary -> {
-                    Set<Integer> entitiesIDs = getEntitiesOfPerson(intermediary, edgeMap, entityMap)
+                    Set<Integer> entitiesIDs = getEntitiesOfPerson(intermediary)
                             .stream()
                             .collect(HashSet<Integer>::new,
                                     (set, entity) -> set.add(entity.getNodeId()),
@@ -75,5 +87,22 @@ public class PanamaPaper {
                     return new EntryPair<Intermediary, Set<Integer>>(intermediary, entitiesIDs);
                 })
                 .collect(toList());
+    }
+
+
+    public void setOfficerList(List<Officer> officerList) {
+        this.officerList = officerList;
+    }
+
+    public void setIntermediaryList(List<Intermediary> intermediaryList) {
+        this.intermediaryList = intermediaryList;
+    }
+
+    public void setEntityMap(Map<Integer, Entity> entityMap) {
+        this.entityMap = entityMap;
+    }
+
+    public void setEdgeMap(Map<Integer, Map<Integer, Edge>> edgeMap) {
+        this.edgeMap = edgeMap;
     }
 }

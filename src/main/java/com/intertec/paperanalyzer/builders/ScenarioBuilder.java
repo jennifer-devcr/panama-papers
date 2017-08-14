@@ -17,6 +17,8 @@ public class ScenarioBuilder {
     private LinesFileParser<Map<Integer, Entity>> entityLinesParser;
     private LinesFileParser<Map<Integer, Map<Integer, Edge>>> edgeLinesParser;
 
+    public ScenarioBuilder(){}
+
     public ScenarioBuilder(LinesFileParser<List<Officer>> officerLinesParser, LinesFileParser<List<Intermediary>> intermediaryLinesParser, LinesFileParser<Map<Integer, Entity>> entityLinesParser, LinesFileParser<Map<Integer, Map<Integer, Edge>>> edgeLinesParser) {
         this.officerLinesParser = officerLinesParser;
         this.intermediaryLinesParser = intermediaryLinesParser;

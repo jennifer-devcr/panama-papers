@@ -1,6 +1,7 @@
-package com.intertec.paperanalyzer.domainmodels;
+package com.intertec.paperanalyzer.business;
 
 
+import com.intertec.paperanalyzer.business.PanamaPaper;
 import com.intertec.paperanalyzer.commons.EntryPair;
 import com.intertec.paperanalyzer.domainmodels.*;
 import org.testng.annotations.DataProvider;
@@ -18,40 +19,37 @@ import static org.testng.Assert.assertNotNull;
 public class PanamaPaperTest {
     @Test
     public void testAnalyze() throws IOException {
-        PanamaPaper panamaPaper = new PanamaPaper();
-
         String countryCode = "CRI";
         List<Officer> officerList = mock(List.class);
         List<Intermediary> intermediaryList = mock(List.class);
         Map<Integer, Entity> entityMap = mock(Map.class);
         Map<Integer, Map<Integer, Edge>> edgeMap = mock(Map.class);
 
-        PaperResult paperResult = panamaPaper.analyzePapers(countryCode, officerList, intermediaryList, entityMap, edgeMap);
+        PanamaPaper panamaPaper = new PanamaPaper(officerList, intermediaryList, entityMap, edgeMap);
+
+        PaperResult paperResult = panamaPaper.analyzePapers(countryCode);
     }
 
 
     @Test
     public void testMapIntermediary() {
-        PanamaPaper panamaPaper = new PanamaPaper();
-
         List<Intermediary> intermediaryList = new ArrayList<>();
         Intermediary mockIntermediary = mock(Intermediary.class);
         when(mockIntermediary.getNodeId()).thenReturn(123);
         intermediaryList.add(mockIntermediary);
-
 
         Map<Integer, Entity> entityMap = new HashMap<>();
         Entity mockEntity = mock(Entity.class);
         when(mockEntity.getNodeId()).thenReturn(456);
         entityMap.put(456, mockEntity);
 
-
         Map<Integer, Map<Integer, Edge>> edgeMap = new HashMap<>();
         edgeMap.put(123, new HashMap<>());
         edgeMap.get(123).put(456, new Edge(123, 456));
 
+        PanamaPaper panamaPaper = new PanamaPaper(mock(List.class), intermediaryList, entityMap, edgeMap);
 
-        List<EntryPair<Intermediary, Set<Integer>>> result = panamaPaper.mapIntermediariesWithEntities(intermediaryList, entityMap, edgeMap);
+        List<EntryPair<Intermediary, Set<Integer>>> result = panamaPaper.mapIntermediariesWithEntities();
 
         assertEquals(result.size(), 1);
     }
@@ -111,7 +109,8 @@ public class PanamaPaperTest {
 
     @Test(dataProvider = "testGetEntitiesOfPersonData")
     public void testGetEntitiesOfPerson(Person person, Map<Integer, Entity> entities, Map<Integer, Map<Integer, Edge>> edges, int entityAmount){
-        Set<Entity> entitiesOfPerson = new PanamaPaper().getEntitiesOfPerson(person, edges, entities);
+        PanamaPaper panamaPaper = new PanamaPaper(mock(List.class), mock(List.class), entities, edges);
+        Set<Entity> entitiesOfPerson = panamaPaper.getEntitiesOfPerson(person);
 
         assertNotNull(entitiesOfPerson);
         assertEquals(entitiesOfPerson.size(), entityAmount);

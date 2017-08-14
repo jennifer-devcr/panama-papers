@@ -1,6 +1,8 @@
 package com.intertec.paperanalyzer.domainmodels;
 
 
+import com.intertec.paperanalyzer.business.PaperStatistic;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;

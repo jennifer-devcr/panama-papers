@@ -1,4 +1,4 @@
-package com.intertec.paperanalyzer.domainmodels;
+package com.intertec.paperanalyzer.business;
 
 import java.util.List;
 
