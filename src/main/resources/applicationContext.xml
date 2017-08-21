@@ -4,25 +4,25 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
 	   					   http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="officerParserBean" class="com.intertec.paperanalyzer.parsers.OfficerParser" scope="prototype"/>
+    <bean id="officerParser" class="com.intertec.paperanalyzer.parsers.OfficerParser" scope="prototype"/>
 
-    <bean id="intermediaryParserBean" class="com.intertec.paperanalyzer.parsers.IntermediaryParser" scope="prototype"/>
+    <bean id="intermediaryParser" class="com.intertec.paperanalyzer.parsers.IntermediaryParser" scope="prototype"/>
 
-    <bean id="entityParserBean" class="com.intertec.paperanalyzer.parsers.EntityParser" scope="prototype"/>
+    <bean id="entityParser" class="com.intertec.paperanalyzer.parsers.EntityParser" scope="prototype"/>
 
-    <bean id="edgeParserBean" class="com.intertec.paperanalyzer.parsers.EdgeParser" scope="prototype"/>
+    <bean id="edgeParser" class="com.intertec.paperanalyzer.parsers.EdgeParser" scope="prototype"/>
 
-    <bean id="panamaPaperFactoryBean" class="com.intertec.paperanalyzer.factories.PanamaPaperFactory" scope="prototype"/>
+    <bean id="panamaPaperFactory" class="com.intertec.paperanalyzer.factories.PanamaPaperFactory" scope="prototype"/>
 
-    <bean id="scenarioBuilderBean" class="com.intertec.paperanalyzer.builders.ScenarioBuilder">
-        <property name="officerLinesParser" ref="officerParserBean"/>
-        <property name="intermediaryLinesParser" ref="intermediaryParserBean"/>
-        <property name="entityLinesParser" ref="entityParserBean"/>
-        <property name="edgeLinesParser" ref="edgeParserBean"/>
+    <bean id="scenarioBuilder" class="com.intertec.paperanalyzer.builders.ScenarioBuilder" scope="prototype">
+        <property name="officerLinesParser" ref="officerParser"/>
+        <property name="intermediaryLinesParser" ref="intermediaryParser"/>
+        <property name="entityLinesParser" ref="entityParser"/>
+        <property name="edgeLinesParser" ref="edgeParser"/>
     </bean>
 
-    <bean id="panamaPaperBean" class="com.intertec.paperanalyzer.business.PanamaPaper" factory-method="generatePanamaPaper" factory-bean="panamaPaperFactoryBean">
-        <constructor-arg ref="scenarioBuilderBean"/>
+    <bean id="panamaPaper" class="com.intertec.paperanalyzer.business.PanamaPaper" factory-method="generatePanamaPaper" factory-bean="panamaPaperFactory" scope="prototype">
+        <constructor-arg ref="scenarioBuilder"/>
     </bean>
 
 </beans>

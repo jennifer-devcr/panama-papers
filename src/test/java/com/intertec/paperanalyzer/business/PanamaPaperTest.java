@@ -1,9 +1,15 @@
 package com.intertec.paperanalyzer.business;
 
 
+import com.intertec.paperanalyzer.builders.ScenarioBuilder;
 import com.intertec.paperanalyzer.business.PanamaPaper;
 import com.intertec.paperanalyzer.commons.EntryPair;
 import com.intertec.paperanalyzer.domainmodels.*;
+import com.intertec.paperanalyzer.factories.PanamaPaperFactory;
+import com.intertec.paperanalyzer.parsers.EdgeParser;
+import com.intertec.paperanalyzer.parsers.EntityParser;
+import com.intertec.paperanalyzer.parsers.IntermediaryParser;
+import com.intertec.paperanalyzer.parsers.OfficerParser;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -20,14 +26,50 @@ public class PanamaPaperTest {
     @Test
     public void testAnalyze() throws IOException {
         String countryCode = "CRI";
-        List<Officer> officerList = mock(List.class);
-        List<Intermediary> intermediaryList = mock(List.class);
-        Map<Integer, Entity> entityMap = mock(Map.class);
-        Map<Integer, Map<Integer, Edge>> edgeMap = mock(Map.class);
+        ScenarioBuilder scenarioBuilder = new ScenarioBuilder(new OfficerParser(), new IntermediaryParser(), new EntityParser(), new EdgeParser());
 
-        PanamaPaper panamaPaper = new PanamaPaper(officerList, intermediaryList, entityMap, edgeMap);
-
+        PanamaPaper panamaPaper = new PanamaPaperFactory().generatePanamaPaper(scenarioBuilder);
         PaperResult paperResult = panamaPaper.analyzePapers(countryCode);
+
+        EntryPair<String, Integer> countryWithMoreEntitiesExpected = mock(EntryPair.class);
+        when(countryWithMoreEntitiesExpected.getEntry()).thenReturn("CRI");
+        when(countryWithMoreEntitiesExpected.getValue()).thenReturn(8);
+
+        EntryPair<Officer, Integer> officerWithMoreEntitiesExpected = mock(EntryPair.class);
+        Officer officerExpected = mock(Officer.class);
+        when(officerExpected.getNodeId()).thenReturn(12099150);
+        when(officerWithMoreEntitiesExpected.getEntry()).thenReturn(officerExpected);
+        when(officerWithMoreEntitiesExpected.getValue()).thenReturn(2);
+
+        EntryPair<Intermediary, Integer> intermediaryAssistedMoreOfficersExpected = mock(EntryPair.class);
+        Intermediary intermediaryExpected = mock(Intermediary.class);
+        when(intermediaryExpected.getNodeId()).thenReturn(11000003);
+        when(intermediaryAssistedMoreOfficersExpected.getEntry()).thenReturn(intermediaryExpected);
+        when(intermediaryAssistedMoreOfficersExpected.getValue()).thenReturn(2);
+
+
+
+        assertNotNull(paperResult);
+        assertNotNull(paperResult.getOfficers());
+        assertEquals(paperResult.getOfficers().size(), 8);
+
+        PaperStatistic paperStatistic = paperResult.getStatistic();
+        assertNotNull(paperStatistic);
+
+        assertNotNull(paperStatistic.getCountryWithMoreEntities());
+        assertNotNull(paperStatistic.getCountryWithMoreEntities().getEntry());
+        assertEquals(paperStatistic.getCountryWithMoreEntities().getEntry(), countryWithMoreEntitiesExpected.getEntry());
+        assertEquals(paperStatistic.getCountryWithMoreEntities().getValue(), countryWithMoreEntitiesExpected.getValue());
+
+        assertNotNull(paperStatistic.getOfficerWithMoreEntities());
+        assertNotNull(paperStatistic.getOfficerWithMoreEntities().getEntry());
+        assertEquals(paperStatistic.getOfficerWithMoreEntities().getEntry().getNodeId(), officerWithMoreEntitiesExpected.getEntry().getNodeId());
+        assertEquals(paperStatistic.getOfficerWithMoreEntities().getValue(), officerWithMoreEntitiesExpected.getValue());
+
+        assertNotNull(paperStatistic.getIntermediaryAssistedMoreOfficers());
+        assertNotNull(paperStatistic.getIntermediaryAssistedMoreOfficers().getEntry());
+        assertEquals(paperStatistic.getIntermediaryAssistedMoreOfficers().getEntry().getNodeId(), intermediaryAssistedMoreOfficersExpected.getEntry().getNodeId());
+        assertEquals(paperStatistic.getIntermediaryAssistedMoreOfficers().getValue(), intermediaryAssistedMoreOfficersExpected.getValue());
     }
 
 

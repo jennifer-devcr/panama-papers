@@ -4,6 +4,7 @@ import com.intertec.paperanalyzer.commons.EntryPair;
 import com.intertec.paperanalyzer.commons.ObservableMap;
 import com.intertec.paperanalyzer.domainmodels.*;
 import com.intertec.paperanalyzer.predicates.OfficerFromCountryPredicate;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.HashMap;

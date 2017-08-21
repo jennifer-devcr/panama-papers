@@ -3,8 +3,21 @@ version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
 
 sourceCompatibility = 1.8
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.2.RELEASE")
+    }
+}
 
 repositories {
     mavenCentral()
@@ -22,11 +35,18 @@ idea {
     }
 }
 
+bootRepackage {
+    mainClass = 'com.intertec.paperanalyzer.PanamaPaperRestfulApplication'
+}
+
 dependencies {
     compile 'com.google.caliper:caliper:1.0-beta-2'
-    compile 'org.springframework:spring-core:4.3.10.RELEASE'
-    compile 'org.springframework:spring-context:4.3.10.RELEASE'
-    compile 'org.springframework:spring-test:4.3.10.RELEASE'
+    compile "org.springframework.boot:spring-boot-starter:1.5.2.RELEASE"
+    compile "org.springframework:spring-webmvc:4.3.7.RELEASE"
+    compile "org.springframework.boot:spring-boot-starter-jetty:1.5.2.RELEASE"
+    compile "org.springframework.boot:spring-boot-starter-actuator"
+    compile "org.eclipse.jetty:jetty-servlets:9.3.7.v20160115"
+    testCompile "org.springframework.boot:spring-boot-starter-test:1.5.2.RELEASE"
     testCompile 'org.testng:testng:6.11'
     testCompile 'org.mockito:mockito-core:2.7.21'
 }
